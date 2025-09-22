@@ -1,0 +1,13 @@
+# Test file: test.stim
+M 0 1
+DETECTOR rec[-1]
+REPEAT 3 {
+   M 2 3
+}
+DETECTOR rec[-2]
+TICK
+X 0
+CNOT 0 1
+QUBIT_COORDS(0, 0) 0
+H 0 1 2
+rec[-6]

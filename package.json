@@ -1,0 +1,46 @@
+{
+  "name": "tree-sitter-stim",
+  "version": "1.0.0",
+  "description": "Tree-sitter grammar for Stim quantum circuit simulator files",
+  "main": "bindings/node",
+  "keywords": [
+    "tree-sitter",
+    "parser",
+    "stim",
+    "quantum",
+    "circuit",
+    "grammar"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/tree-sitter-stim"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "nan": "^2.14.0"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.20.0"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.stim",
+      "file-types": [
+        "stim"
+      ],
+      "highlights": "queries/highlights.scm"
+    }
+  ],
+  "files": [
+    "grammar.js",
+    "src",
+    "queries",
+    "bindings"
+  ],
+  "scripts": {
+    "build": "tree-sitter generate && node-gyp build",
+    "test": "tree-sitter test && tree-sitter parse examples/*.stim",
+    "install": "node-gyp rebuild"
+  }
+}

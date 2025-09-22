@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree-sitter generate:*)",
+      "Bash(tree-sitter test:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

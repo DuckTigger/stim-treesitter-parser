@@ -1,0 +1,104 @@
+==================
+Basic measurements
+==================
+
+M 0 1
+
+---
+
+(source_file
+  (measurement_instruction
+    (target (integer))
+    (target (integer))))
+
+==================
+Detector with record reference
+==================
+
+DETECTOR rec[-1]
+
+---
+
+(source_file
+  (detector_instruction
+    (record_ref (negative_integer))))
+
+==================
+REPEAT block
+==================
+
+REPEAT 3 {
+   M 0 1
+}
+
+---
+
+(source_file
+  (repeat_block
+    (integer)
+    (measurement_instruction
+      (target (integer))
+      (target (integer)))))
+
+==================
+Standalone record reference
+==================
+
+rec[-5]
+
+---
+
+(source_file
+  (standalone_record_ref (negative_integer)))
+
+==================
+Gate instruction
+==================
+
+H 0 1 2
+
+---
+
+(source_file
+  (gate_instruction
+    (gate_name)
+    (target (integer))
+    (target (integer))
+    (target (integer))))
+
+==================
+Comment
+==================
+
+# This is a comment
+
+---
+
+(source_file
+  (comment))
+
+==================
+TICK instruction
+==================
+
+TICK
+
+---
+
+(source_file
+  (tick))
+
+==================
+QUBIT_COORDS instruction
+==================
+
+QUBIT_COORDS(0, 0) 0
+
+---
+
+(source_file
+  (qubit_coords
+    (coords
+      (number)
+      (number))
+    (integer)))

@@ -1,0 +1,203 @@
+name: Test Stim Tree-sitter Plugin
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  cli-tests:
+    runs-on: ubuntu-latest
+    name: CLI Tests
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Lua
+      uses: leafo/gh-actions-lua@v10
+      with:
+        luaVersion: "5.4"
+
+    - name: Run CLI tests
+      run: |
+        cd tests
+        lua cli_test_runner.lua
+
+    - name: Verify test fixtures exist
+      run: |
+        test -f tests/fixtures/simple.stim
+        test -f tests/fixtures/repeat.stim
+        test -f tests/fixtures/nested_repeat.stim
+
+  neovim-tests:
+    runs-on: ubuntu-latest
+    name: Neovim Integration Tests
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Neovim
+      uses: rhysd/action-setup-vim@v1
+      with:
+        neovim: true
+        version: stable
+
+    - name: Test Neovim Lua files syntax
+      run: |
+        nvim --headless -c "luafile stim-treesitter.lua" -c "qa!"
+        nvim --headless -c "luafile stim-treesitter-config.lua" -c "qa!"
+
+    - name: Run basic Neovim tests
+      run: |
+        nvim --headless -c "
+        lua << EOF
+        -- Add current directory to package path
+        package.path = vim.fn.getcwd() .. '/?.lua;' .. package.path
+
+        -- Test basic module loading
+        local stim_treesitter = require('stim-treesitter')
+        assert(type(stim_treesitter.setup) == 'function', 'setup function should exist')
+        assert(type(stim_treesitter.highlight_measurement) == 'function', 'highlight_measurement function should exist')
+
+        -- Test setup doesn't crash
+        stim_treesitter.setup()
+
+        print('✓ Basic Neovim integration tests passed')
+        EOF
+        " -c "qa!"
+
+  lint-and-format:
+    runs-on: ubuntu-latest
+    name: Lint and Format
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Lua
+      uses: leafo/gh-actions-lua@v10
+      with:
+        luaVersion: "5.4"
+
+    - name: Install luarocks
+      uses: leafo/gh-actions-luarocks@v4
+
+    - name: Install luacheck
+      run: luarocks install luacheck
+
+    - name: Lint Lua files
+      run: |
+        luacheck *.lua --ignore 113 --ignore 212 --ignore 213
+        luacheck tests/*.lua --ignore 113 --ignore 212 --ignore 213
+
+    - name: Check file permissions
+      run: |
+        find . -name "*.lua" -type f ! -perm 644 -exec ls -la {} \; | tee perm_issues.txt
+        if [ -s perm_issues.txt ]; then
+          echo "❌ Some Lua files have incorrect permissions"
+          exit 1
+        else
+          echo "✅ All Lua files have correct permissions"
+        fi
+
+  documentation:
+    runs-on: ubuntu-latest
+    name: Documentation
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check documentation files exist
+      run: |
+        test -f README.md || echo "⚠️  README.md not found"
+        test -f INSTALL.md && echo "✅ INSTALL.md exists"
+        test -f tests/README.md && echo "✅ tests/README.md exists"
+
+    - name: Validate Markdown files
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        use-verbose-mode: 'no'
+        config-file: '.github/markdown-link-check-config.json'
+        folder-path: '.'
+        max-depth: 2
+      continue-on-error: true
+
+  integration:
+    runs-on: ubuntu-latest
+    name: End-to-End Integration
+    needs: [cli-tests, neovim-tests]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Neovim
+      uses: rhysd/action-setup-vim@v1
+      with:
+        neovim: true
+        version: stable
+
+    - name: Setup Lua
+      uses: leafo/gh-actions-lua@v10
+      with:
+        luaVersion: "5.4"
+
+    - name: Test complete workflow
+      run: |
+        # Test CLI runner works
+        echo "Testing CLI runner..."
+        cd tests && lua cli_test_runner.lua
+
+        # Test Neovim integration with fixture files
+        echo "Testing Neovim integration..."
+        nvim --headless -c "
+        lua << EOF
+        package.path = vim.fn.getcwd() .. '/?.lua;' .. package.path
+
+        -- Load plugin
+        local stim_treesitter = require('stim-treesitter')
+        stim_treesitter.setup()
+
+        -- Test with a fixture file
+        local bufnr = vim.api.nvim_create_buf(false, true)
+        local lines = {
+          'M 0 1',
+          'DETECTOR rec[-1]',
+          'M 2 3 4',
+          'DETECTOR rec[-2]'
+        }
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+        vim.api.nvim_buf_set_option(bufnr, 'filetype', 'stim')
+        vim.api.nvim_set_current_buf(bufnr)
+
+        -- Test highlighting
+        vim.api.nvim_win_set_cursor(0, {2, 12})  -- Position on rec[-1]
+        stim_treesitter.highlight_measurement()
+
+        vim.api.nvim_win_set_cursor(0, {4, 12})  -- Position on rec[-2]
+        stim_treesitter.highlight_measurement()
+
+        print('✅ End-to-end integration test passed')
+        EOF
+        " -c "qa!"
+
+    - name: Generate test report
+      if: always()
+      run: |
+        echo "# Test Results" > test-report.md
+        echo "" >> test-report.md
+        echo "## CLI Tests" >> test-report.md
+        if cd tests && lua cli_test_runner.lua; then
+          echo "✅ Passed" >> test-report.md
+        else
+          echo "❌ Failed" >> test-report.md
+        fi
+        echo "" >> test-report.md
+        echo "Generated at: $(date)" >> test-report.md
+
+    - name: Upload test report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-report
+        path: test-report.md

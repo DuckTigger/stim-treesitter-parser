@@ -1,0 +1,9 @@
+REPEAT 3 {
+   M 0 1
+}
+rec[-3]
+REPEAT 2 {
+   M 5
+   M 6 7
+}
+DETECTOR rec[-1]

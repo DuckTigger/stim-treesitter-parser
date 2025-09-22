@@ -5,6 +5,33 @@
 local M = {}
 local ns_id = vim.api.nvim_create_namespace('stim_treesitter_highlights')
 
+-- Helper function to find repeat count for a node
+local function get_repeat_multiplier(node, bufnr, root)
+    local current = node
+    local multiplier = 1
+
+    -- Walk up the tree to find any REPEAT blocks that contain this measurement
+    while current do
+        current = current:parent()
+        if current and current:type() == 'repeat_instruction' then
+            -- Find the repeat count in the REPEAT instruction
+            for child in current:iter_children() do
+                if child:type() == 'integer' then
+                    local start_row, start_col, end_row, end_col = child:range()
+                    local text = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
+                    local count = tonumber(text[1] or "1")
+                    if count then
+                        multiplier = multiplier * count
+                    end
+                    break
+                end
+            end
+        end
+    end
+
+    return multiplier
+end
+
 -- Parse measurements using Tree-sitter
 local function parse_measurements_ts(bufnr)
     local parser = vim.treesitter.get_parser(bufnr, 'stim')
@@ -79,30 +106,39 @@ local function parse_measurements_ts(bufnr)
             end
         end
 
-        -- Store each measurement target individually
-        for target_idx, target in ipairs(targets) do
-            measurements[measurement_count] = {
-                line = start_row + 1,  -- Convert to 1-indexed
-                node = node,
-                text = text,
-                index = measurement_count,
-                target = target,
-                target_index = target_idx - 1  -- 0-indexed for the target within this measurement
-            }
-            measurement_count = measurement_count + 1
+        -- Get the repeat multiplier for this measurement
+        local repeat_multiplier = get_repeat_multiplier(node, bufnr, root)
+
+        -- Store each measurement target individually, accounting for repeats
+        for repeat_idx = 1, repeat_multiplier do
+            for target_idx, target in ipairs(targets) do
+                measurements[measurement_count] = {
+                    line = start_row + 1,  -- Convert to 1-indexed
+                    node = node,
+                    text = text,
+                    index = measurement_count,
+                    target = target,
+                    target_index = target_idx - 1,  -- 0-indexed for the target within this measurement
+                    repeat_instance = repeat_idx - 1  -- Which repeat iteration this is
+                }
+                measurement_count = measurement_count + 1
+            end
         end
 
-        -- If no targets found at all, create a single measurement entry
+        -- If no targets found at all, create measurement entries for each repeat
         if #targets == 0 then
-            measurements[measurement_count] = {
-                line = start_row + 1,
-                node = node,
-                text = text,
-                index = measurement_count,
-                target = nil,
-                target_index = 0
-            }
-            measurement_count = measurement_count + 1
+            for repeat_idx = 1, repeat_multiplier do
+                measurements[measurement_count] = {
+                    line = start_row + 1,
+                    node = node,
+                    text = text,
+                    index = measurement_count,
+                    target = nil,
+                    target_index = 0,
+                    repeat_instance = repeat_idx - 1
+                }
+                measurement_count = measurement_count + 1
+            end
         end
     end
 

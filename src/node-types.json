@@ -1,0 +1,553 @@
+[
+  {
+    "type": "coords",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "number",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "detector_instruction",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "coords",
+          "named": true
+        },
+        {
+          "type": "record_ref",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "gate_instruction",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "gate_name",
+          "named": true
+        },
+        {
+          "type": "target",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "gate_name",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "integer",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "measurement_instruction",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "target",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "negative_integer",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "number",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "observable_instruction",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "coords",
+          "named": true
+        },
+        {
+          "type": "record_ref",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "qubit_coords",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "coords",
+          "named": true
+        },
+        {
+          "type": "integer",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "record_ref",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "integer",
+          "named": true
+        },
+        {
+          "type": "negative_integer",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "repeat_block",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "detector_instruction",
+          "named": true
+        },
+        {
+          "type": "gate_instruction",
+          "named": true
+        },
+        {
+          "type": "integer",
+          "named": true
+        },
+        {
+          "type": "measurement_instruction",
+          "named": true
+        },
+        {
+          "type": "observable_instruction",
+          "named": true
+        },
+        {
+          "type": "qubit_coords",
+          "named": true
+        },
+        {
+          "type": "repeat_block",
+          "named": true
+        },
+        {
+          "type": "standalone_record_ref",
+          "named": true
+        },
+        {
+          "type": "tick",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "source_file",
+    "named": true,
+    "root": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "detector_instruction",
+          "named": true
+        },
+        {
+          "type": "gate_instruction",
+          "named": true
+        },
+        {
+          "type": "measurement_instruction",
+          "named": true
+        },
+        {
+          "type": "observable_instruction",
+          "named": true
+        },
+        {
+          "type": "qubit_coords",
+          "named": true
+        },
+        {
+          "type": "repeat_block",
+          "named": true
+        },
+        {
+          "type": "standalone_record_ref",
+          "named": true
+        },
+        {
+          "type": "tick",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "standalone_record_ref",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "integer",
+          "named": true
+        },
+        {
+          "type": "negative_integer",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "target",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "integer",
+          "named": true
+        },
+        {
+          "type": "underscore",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "\n",
+    "named": false
+  },
+  {
+    "type": "(",
+    "named": false
+  },
+  {
+    "type": ")",
+    "named": false
+  },
+  {
+    "type": ",",
+    "named": false
+  },
+  {
+    "type": ":",
+    "named": false
+  },
+  {
+    "type": "CNOT",
+    "named": false
+  },
+  {
+    "type": "CX",
+    "named": false
+  },
+  {
+    "type": "CY",
+    "named": false
+  },
+  {
+    "type": "CZ",
+    "named": false
+  },
+  {
+    "type": "DEPOLARIZE1",
+    "named": false
+  },
+  {
+    "type": "DEPOLARIZE2",
+    "named": false
+  },
+  {
+    "type": "DETECTOR",
+    "named": false
+  },
+  {
+    "type": "E",
+    "named": false
+  },
+  {
+    "type": "ELSE_CORRELATED_ERROR",
+    "named": false
+  },
+  {
+    "type": "H",
+    "named": false
+  },
+  {
+    "type": "I",
+    "named": false
+  },
+  {
+    "type": "ISWAP",
+    "named": false
+  },
+  {
+    "type": "ISWAP_DAG",
+    "named": false
+  },
+  {
+    "type": "M",
+    "named": false
+  },
+  {
+    "type": "MPAD",
+    "named": false
+  },
+  {
+    "type": "MR",
+    "named": false
+  },
+  {
+    "type": "MRX",
+    "named": false
+  },
+  {
+    "type": "MRY",
+    "named": false
+  },
+  {
+    "type": "MRZ",
+    "named": false
+  },
+  {
+    "type": "MX",
+    "named": false
+  },
+  {
+    "type": "MY",
+    "named": false
+  },
+  {
+    "type": "MZ",
+    "named": false
+  },
+  {
+    "type": "OBSERVABLE_INCLUDE",
+    "named": false
+  },
+  {
+    "type": "PAULI_CHANNEL_1",
+    "named": false
+  },
+  {
+    "type": "PAULI_CHANNEL_2",
+    "named": false
+  },
+  {
+    "type": "QUBIT_COORDS",
+    "named": false
+  },
+  {
+    "type": "R",
+    "named": false
+  },
+  {
+    "type": "REPEAT",
+    "named": false
+  },
+  {
+    "type": "RX",
+    "named": false
+  },
+  {
+    "type": "RY",
+    "named": false
+  },
+  {
+    "type": "RZ",
+    "named": false
+  },
+  {
+    "type": "S",
+    "named": false
+  },
+  {
+    "type": "SQRT_X",
+    "named": false
+  },
+  {
+    "type": "SQRT_X_DAG",
+    "named": false
+  },
+  {
+    "type": "SQRT_Y",
+    "named": false
+  },
+  {
+    "type": "SQRT_Y_DAG",
+    "named": false
+  },
+  {
+    "type": "SQRT_Z",
+    "named": false
+  },
+  {
+    "type": "SQRT_Z_DAG",
+    "named": false
+  },
+  {
+    "type": "SWAP",
+    "named": false
+  },
+  {
+    "type": "S_DAG",
+    "named": false
+  },
+  {
+    "type": "X",
+    "named": false
+  },
+  {
+    "type": "XCX",
+    "named": false
+  },
+  {
+    "type": "XCY",
+    "named": false
+  },
+  {
+    "type": "XCZ",
+    "named": false
+  },
+  {
+    "type": "X_ERROR",
+    "named": false
+  },
+  {
+    "type": "Y",
+    "named": false
+  },
+  {
+    "type": "YCX",
+    "named": false
+  },
+  {
+    "type": "YCY",
+    "named": false
+  },
+  {
+    "type": "YCZ",
+    "named": false
+  },
+  {
+    "type": "Y_ERROR",
+    "named": false
+  },
+  {
+    "type": "Z",
+    "named": false
+  },
+  {
+    "type": "ZCX",
+    "named": false
+  },
+  {
+    "type": "ZCY",
+    "named": false
+  },
+  {
+    "type": "ZCZ",
+    "named": false
+  },
+  {
+    "type": "Z_ERROR",
+    "named": false
+  },
+  {
+    "type": "]",
+    "named": false
+  },
+  {
+    "type": "comment",
+    "named": true,
+    "extra": true
+  },
+  {
+    "type": "rec[",
+    "named": false
+  },
+  {
+    "type": "tick",
+    "named": true
+  },
+  {
+    "type": "underscore",
+    "named": true
+  },
+  {
+    "type": "{",
+    "named": false
+  },
+  {
+    "type": "}",
+    "named": false
+  }
+]

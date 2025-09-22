@@ -1,0 +1,593 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/grammar.schema.json",
+  "name": "stim",
+  "rules": {
+    "source_file": {
+      "type": "REPEAT",
+      "content": {
+        "type": "SYMBOL",
+        "name": "_statement"
+      }
+    },
+    "_statement": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "measurement_instruction"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "detector_instruction"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "observable_instruction"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "gate_instruction"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "qubit_coords"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tick"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "repeat_block"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "standalone_record_ref"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "comment"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_newline"
+        }
+      ]
+    },
+    "measurement_instruction": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "M"
+            },
+            {
+              "type": "STRING",
+              "value": "MR"
+            },
+            {
+              "type": "STRING",
+              "value": "MRX"
+            },
+            {
+              "type": "STRING",
+              "value": "MRY"
+            },
+            {
+              "type": "STRING",
+              "value": "MRZ"
+            },
+            {
+              "type": "STRING",
+              "value": "MX"
+            },
+            {
+              "type": "STRING",
+              "value": "MY"
+            },
+            {
+              "type": "STRING",
+              "value": "MZ"
+            }
+          ]
+        },
+        {
+          "type": "REPEAT1",
+          "content": {
+            "type": "SYMBOL",
+            "name": "target"
+          }
+        }
+      ]
+    },
+    "detector_instruction": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "DETECTOR"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "coords"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
+            "type": "REPEAT1",
+            "content": {
+              "type": "SYMBOL",
+              "name": "record_ref"
+            }
+          }
+        ]
+      }
+    },
+    "observable_instruction": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "OBSERVABLE_INCLUDE"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "coords"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
+            "type": "REPEAT1",
+            "content": {
+              "type": "SYMBOL",
+              "name": "record_ref"
+            }
+          }
+        ]
+      }
+    },
+    "gate_instruction": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "gate_name"
+        },
+        {
+          "type": "REPEAT1",
+          "content": {
+            "type": "SYMBOL",
+            "name": "target"
+          }
+        }
+      ]
+    },
+    "gate_name": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "H"
+        },
+        {
+          "type": "STRING",
+          "value": "X"
+        },
+        {
+          "type": "STRING",
+          "value": "Y"
+        },
+        {
+          "type": "STRING",
+          "value": "Z"
+        },
+        {
+          "type": "STRING",
+          "value": "S"
+        },
+        {
+          "type": "STRING",
+          "value": "S_DAG"
+        },
+        {
+          "type": "STRING",
+          "value": "SQRT_X"
+        },
+        {
+          "type": "STRING",
+          "value": "SQRT_X_DAG"
+        },
+        {
+          "type": "STRING",
+          "value": "SQRT_Y"
+        },
+        {
+          "type": "STRING",
+          "value": "SQRT_Y_DAG"
+        },
+        {
+          "type": "STRING",
+          "value": "SQRT_Z"
+        },
+        {
+          "type": "STRING",
+          "value": "SQRT_Z_DAG"
+        },
+        {
+          "type": "STRING",
+          "value": "I"
+        },
+        {
+          "type": "STRING",
+          "value": "CX"
+        },
+        {
+          "type": "STRING",
+          "value": "CY"
+        },
+        {
+          "type": "STRING",
+          "value": "CZ"
+        },
+        {
+          "type": "STRING",
+          "value": "CNOT"
+        },
+        {
+          "type": "STRING",
+          "value": "SWAP"
+        },
+        {
+          "type": "STRING",
+          "value": "ISWAP"
+        },
+        {
+          "type": "STRING",
+          "value": "ISWAP_DAG"
+        },
+        {
+          "type": "STRING",
+          "value": "XCX"
+        },
+        {
+          "type": "STRING",
+          "value": "XCY"
+        },
+        {
+          "type": "STRING",
+          "value": "XCZ"
+        },
+        {
+          "type": "STRING",
+          "value": "YCX"
+        },
+        {
+          "type": "STRING",
+          "value": "YCY"
+        },
+        {
+          "type": "STRING",
+          "value": "YCZ"
+        },
+        {
+          "type": "STRING",
+          "value": "ZCX"
+        },
+        {
+          "type": "STRING",
+          "value": "ZCY"
+        },
+        {
+          "type": "STRING",
+          "value": "ZCZ"
+        },
+        {
+          "type": "STRING",
+          "value": "R"
+        },
+        {
+          "type": "STRING",
+          "value": "RX"
+        },
+        {
+          "type": "STRING",
+          "value": "RY"
+        },
+        {
+          "type": "STRING",
+          "value": "RZ"
+        },
+        {
+          "type": "STRING",
+          "value": "X_ERROR"
+        },
+        {
+          "type": "STRING",
+          "value": "Y_ERROR"
+        },
+        {
+          "type": "STRING",
+          "value": "Z_ERROR"
+        },
+        {
+          "type": "STRING",
+          "value": "PAULI_CHANNEL_1"
+        },
+        {
+          "type": "STRING",
+          "value": "PAULI_CHANNEL_2"
+        },
+        {
+          "type": "STRING",
+          "value": "DEPOLARIZE1"
+        },
+        {
+          "type": "STRING",
+          "value": "DEPOLARIZE2"
+        },
+        {
+          "type": "STRING",
+          "value": "E"
+        },
+        {
+          "type": "STRING",
+          "value": "ELSE_CORRELATED_ERROR"
+        },
+        {
+          "type": "STRING",
+          "value": "MPAD"
+        }
+      ]
+    },
+    "qubit_coords": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "QUBIT_COORDS"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "coords"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "integer"
+        }
+      ]
+    },
+    "tick": {
+      "type": "STRING",
+      "value": "TICK"
+    },
+    "repeat_block": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "REPEAT"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "integer"
+        },
+        {
+          "type": "STRING",
+          "value": "{"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_statement"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "}"
+        }
+      ]
+    },
+    "target": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "integer"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "underscore"
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "integer"
+            },
+            {
+              "type": "STRING",
+              "value": ":"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "integer"
+            }
+          ]
+        }
+      ]
+    },
+    "record_ref": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "rec["
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "integer"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "negative_integer"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": "]"
+        }
+      ]
+    },
+    "standalone_record_ref": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "rec["
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "integer"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "negative_integer"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": "]"
+        }
+      ]
+    },
+    "coords": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "SYMBOL",
+          "name": "number"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": ","
+              },
+              {
+                "type": "SYMBOL",
+                "name": "number"
+              }
+            ]
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "integer": {
+      "type": "PATTERN",
+      "value": "\\d+"
+    },
+    "negative_integer": {
+      "type": "PATTERN",
+      "value": "-\\d+"
+    },
+    "number": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "\\d+"
+        },
+        {
+          "type": "PATTERN",
+          "value": "-\\d+"
+        },
+        {
+          "type": "PATTERN",
+          "value": "\\d+\\.\\d*"
+        },
+        {
+          "type": "PATTERN",
+          "value": "-\\d+\\.\\d*"
+        },
+        {
+          "type": "PATTERN",
+          "value": "\\d*\\.\\d+"
+        },
+        {
+          "type": "PATTERN",
+          "value": "-\\d*\\.\\d+"
+        }
+      ]
+    },
+    "underscore": {
+      "type": "STRING",
+      "value": "_"
+    },
+    "comment": {
+      "type": "PATTERN",
+      "value": "#.*"
+    },
+    "_newline": {
+      "type": "STRING",
+      "value": "\n"
+    }
+  },
+  "extras": [
+    {
+      "type": "PATTERN",
+      "value": "\\s"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "comment"
+    }
+  ],
+  "conflicts": [],
+  "precedences": [],
+  "externals": [],
+  "inline": [],
+  "supertypes": [],
+  "reserved": {}
+}
