@@ -8,8 +8,8 @@
 (measurement_instruction) @function.call
 
 ;; Detector and Observable instructions
-(detector_instruction) @function.builtin
-(observable_instruction) @function.builtin
+(detector_instruction) @type.builtin
+(observable_instruction) @type.builtin
 
 ;; Record references
 (record_ref) @variable.builtin
@@ -24,12 +24,12 @@
   (noise_name) @keyword.operator)
 
 ;; Control flow
-(tick) @keyword.control
+(tick) @type.builtin
 (repeat_block) @keyword.control.repeat
 
 ;; Coordinates and structure
 (qubit_coords) @type.builtin
-(shift_coords) @type.definition
+(shift_coords) @type.builtin
 (coords) @number.float
 
 ;; Targets

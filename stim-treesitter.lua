@@ -329,25 +329,33 @@ function M.setup()
         highlight default StimRecordHighlight guibg=#5f3a3a ctermbg=52
     ]])
     
-    -- Setup autocmds for cursor movement
+    -- Setup autocmds for cursor movement with debouncing
     local group = vim.api.nvim_create_augroup('StimTreesitter', { clear = true })
-    
+    local highlight_timer = nil
+
     vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
         group = group,
         pattern = '*.stim',
         callback = function()
-            -- Check if buffer is valid
-            local bufnr = vim.api.nvim_get_current_buf()
-            if not vim.api.nvim_buf_is_valid(bufnr) then
-                return
+            -- Cancel previous timer
+            if highlight_timer then
+                highlight_timer:stop()
             end
-            
-            -- Only run if we have the stim parser
-            local ok, parser = pcall(vim.treesitter.get_parser, bufnr, 'stim')
-            if ok and parser then
-                -- Wrap in pcall to prevent errors from breaking cursor movement
-                pcall(M.highlight_measurement)
-            end
+
+            -- Debounce cursor movement highlighting (100ms delay)
+            highlight_timer = vim.defer_fn(function()
+                local bufnr = vim.api.nvim_get_current_buf()
+                if not vim.api.nvim_buf_is_valid(bufnr) then
+                    return
+                end
+
+                -- Only run if we have the stim parser
+                local ok, parser = pcall(vim.treesitter.get_parser, bufnr, 'stim')
+                if ok and parser then
+                    -- Wrap in pcall to prevent errors from breaking cursor movement
+                    pcall(M.highlight_measurement)
+                end
+            end, 100) -- 100ms delay
         end
     })
     
@@ -355,11 +363,29 @@ function M.setup()
     vim.api.nvim_create_user_command('StimInfoTS', M.show_info, {
         desc = 'Show information about the Stim measurement record under cursor'
     })
-    
+
     vim.api.nvim_create_user_command('StimCheckParser', function()
         M.check_parser()
     end, {
         desc = 'Check if Stim Tree-sitter parser is installed'
+    })
+
+    vim.api.nvim_create_user_command('StimQubitCoords', M.show_qubit_coords, {
+        desc = 'Show coordinates for the qubit number under cursor'
+    })
+
+
+    -- Set up key mappings for .stim files
+    vim.api.nvim_create_autocmd('FileType', {
+        group = group,
+        pattern = 'stim',
+        callback = function(args)
+            local opts = { buffer = args.buf, silent = true }
+
+            -- <leader>sq - Show qubit coordinates
+            vim.keymap.set('n', '<leader>sq', M.show_qubit_coords,
+                vim.tbl_extend('force', opts, { desc = 'Show qubit coordinates' }))
+        end
     })
 end
 
@@ -382,6 +408,279 @@ Please install it first:
     vim.notify("Stim Tree-sitter parser is installed and working!", vim.log.levels.INFO)
     return true
 end
+
+-- Parse QUBIT_COORDS definitions from the buffer
+local function parse_qubit_coords(bufnr)
+    local parser = vim.treesitter.get_parser(bufnr, 'stim')
+    if not parser then
+        return {}
+    end
+
+    local tree = parser:parse()[1]
+    if not tree then
+        return {}
+    end
+
+    local root = tree:root()
+    local coords_map = {}
+
+    -- Query for qubit_coords instructions
+    local query_string = [[
+        (qubit_coords) @coords_inst
+    ]]
+
+    local ok, query = pcall(vim.treesitter.query.parse, 'stim', query_string)
+    if not ok then
+        return {}
+    end
+
+    for id, node in query:iter_captures(root, bufnr, 0, -1) do
+        local coords_node = nil
+        local qubit_node = nil
+
+        -- Find the coords and integer children
+        for child in node:iter_children() do
+            if child:type() == 'coords' then
+                coords_node = child
+            elseif child:type() == 'integer' then
+                qubit_node = child
+            end
+        end
+
+        if coords_node and qubit_node then
+            -- Extract coordinates
+            local coords_start_row, coords_start_col, coords_end_row, coords_end_col = coords_node:range()
+            local coords_text = vim.api.nvim_buf_get_text(bufnr, coords_start_row, coords_start_col, coords_end_row, coords_end_col, {})
+
+            -- Extract qubit number
+            local qubit_start_row, qubit_start_col, qubit_end_row, qubit_end_col = qubit_node:range()
+            local qubit_text = vim.api.nvim_buf_get_text(bufnr, qubit_start_row, qubit_start_col, qubit_end_row, qubit_end_col, {})
+
+            local qubit_num = tonumber(qubit_text[1] or "")
+            if qubit_num then
+                coords_map[qubit_num] = coords_text[1] or ""
+            end
+        end
+    end
+
+    return coords_map
+end
+
+-- Find qubit number at cursor position
+local function get_qubit_at_cursor(bufnr)
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local row = cursor[1] - 1  -- Convert to 0-indexed
+    local col = cursor[2]
+
+    local parser = vim.treesitter.get_parser(bufnr, 'stim')
+    if not parser then
+        return nil
+    end
+
+    local tree = parser:parse()[1]
+    if not tree then
+        return nil
+    end
+
+    local root = tree:root()
+
+    -- Query for integer nodes (potential qubit numbers)
+    local query_string = [[
+        (integer) @int
+    ]]
+
+    local ok, query = pcall(vim.treesitter.query.parse, 'stim', query_string)
+    if not ok then
+        return nil
+    end
+
+    for id, node in query:iter_captures(root, bufnr, 0, -1) do
+        local start_row, start_col, end_row, end_col = node:range()
+
+        -- Check if cursor is within this node
+        if row >= start_row and row <= end_row then
+            if row > start_row or col >= start_col then
+                if row < end_row or col < end_col then
+                    -- Check if this integer is used as a qubit target (not in QUBIT_COORDS definition)
+                    local parent = node:parent()
+                    if parent and parent:type() ~= 'qubit_coords' and parent:type() ~= 'repeat_instruction' then
+                        -- Extract the integer value
+                        local text = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
+                        local qubit_num = tonumber(text[1] or "")
+
+                        if qubit_num then
+                            return {
+                                node = node,
+                                qubit_num = qubit_num,
+                                row = start_row,
+                                start_col = start_col,
+                                end_col = end_col
+                            }
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+-- Show qubit coordinates in floating window
+function M.show_qubit_coords()
+    local bufnr = vim.api.nvim_get_current_buf()
+
+    -- First check if we're in a .stim file
+    local filename = vim.api.nvim_buf_get_name(bufnr)
+    if not filename:match('%.stim$') then
+        local lines = { "Not in a .stim file" }
+        M._show_coord_float(lines)
+        return
+    end
+
+    -- Check if cursor is on an integer at all
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local row = cursor[1] - 1
+    local col = cursor[2]
+    local line_text = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] or ""
+
+    -- Get character under cursor
+    local char_under_cursor = line_text:sub(col + 1, col + 1)
+    if not char_under_cursor:match('%d') then
+        local lines = { "Cursor not on a number" }
+        M._show_coord_float(lines)
+        return
+    end
+
+    local qubit_info = get_qubit_at_cursor(bufnr)
+    if not qubit_info then
+        -- Check if we're in a QUBIT_COORDS definition
+        local parser = vim.treesitter.get_parser(bufnr, 'stim')
+        if parser then
+            local tree = parser:parse()[1]
+            if tree then
+                local root = tree:root()
+                local query_string = [[(qubit_coords) @coords]]
+                local ok, query = pcall(vim.treesitter.query.parse, 'stim', query_string)
+                if ok then
+                    for id, node in query:iter_captures(root, bufnr, 0, -1) do
+                        local start_row, start_col, end_row, end_col = node:range()
+                        if row >= start_row and row <= end_row and
+                           (row > start_row or col >= start_col) and
+                           (row < end_row or col < end_col) then
+                            local lines = { "Cursor in QUBIT_COORDS definition", "Use on qubit references instead" }
+                            M._show_coord_float(lines)
+                            return
+                        end
+                    end
+                end
+            end
+        end
+
+        -- Check if it's a number in REPEAT instruction
+        if parser then
+            local tree = parser:parse()[1]
+            if tree then
+                local root = tree:root()
+                local query_string = [[(repeat_instruction) @repeat]]
+                local ok, query = pcall(vim.treesitter.query.parse, 'stim', query_string)
+                if ok then
+                    for id, node in query:iter_captures(root, bufnr, 0, -1) do
+                        local start_row, start_col, end_row, end_col = node:range()
+                        if row >= start_row and row <= end_row and
+                           (row > start_row or col >= start_col) and
+                           (row < end_row or col < end_col) then
+                            local lines = { "Cursor on repeat count", "Use on qubit numbers instead" }
+                            M._show_coord_float(lines)
+                            return
+                        end
+                    end
+                end
+            end
+        end
+
+        local lines = { "Number under cursor is not a qubit reference" }
+        M._show_coord_float(lines)
+        return
+    end
+
+    local coords_map = parse_qubit_coords(bufnr)
+
+    -- Check if any coordinates are defined at all
+    local coords_count = 0
+    for _ in pairs(coords_map) do
+        coords_count = coords_count + 1
+    end
+
+    if coords_count == 0 then
+        local lines = {
+            string.format("Qubit %d", qubit_info.qubit_num),
+            "No QUBIT_COORDS defined in file"
+        }
+        M._show_coord_float(lines)
+        return
+    end
+
+    local coords = coords_map[qubit_info.qubit_num]
+
+    local lines
+    if coords then
+        lines = {
+            string.format("Qubit %d coordinates:", qubit_info.qubit_num),
+            coords
+        }
+    else
+        lines = {
+            string.format("Qubit %d", qubit_info.qubit_num),
+            "No coordinates defined for this qubit"
+        }
+    end
+
+    M._show_coord_float(lines)
+end
+
+-- Helper function to show coordinate floating window
+function M._show_coord_float(lines)
+    local bufnr = vim.api.nvim_get_current_buf()
+
+    -- Create floating window
+    local float_bufnr = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_lines(float_bufnr, 0, -1, false, lines)
+
+    -- Calculate window size based on content
+    local max_width = 0
+    for _, line in ipairs(lines) do
+        max_width = math.max(max_width, vim.fn.strdisplaywidth(line))
+    end
+
+    local win_opts = {
+        relative = "cursor",
+        width = math.min(max_width + 4, 80),
+        height = #lines,
+        row = 1,
+        col = 0,
+        border = "rounded",
+        style = "minimal",
+        zindex = 50,
+    }
+
+    local win_id = vim.api.nvim_open_win(float_bufnr, false, win_opts)
+
+    -- Set highlight
+    vim.api.nvim_win_set_option(win_id, 'winhl', 'Normal:Normal,FloatBorder:FloatBorder')
+
+    -- Auto-close on cursor movement
+    vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "InsertEnter" }, {
+        buffer = bufnr,
+        once = true,
+        callback = function()
+            if vim.api.nvim_win_is_valid(win_id) then
+                vim.api.nvim_win_close(win_id, true)
+            end
+        end,
+    })
+end
+
 
 -- Export the get_record_ref_at_cursor function for external use
 M.get_record_ref_at_cursor = get_record_ref_at_cursor
