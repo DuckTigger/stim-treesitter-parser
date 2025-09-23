@@ -83,6 +83,34 @@
     "fields": {}
   },
   {
+    "type": "noise_channel",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "coords",
+          "named": true
+        },
+        {
+          "type": "noise_name",
+          "named": true
+        },
+        {
+          "type": "target",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "noise_name",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "number",
     "named": true,
     "fields": {}
@@ -173,6 +201,10 @@
           "named": true
         },
         {
+          "type": "noise_channel",
+          "named": true
+        },
+        {
           "type": "observable_instruction",
           "named": true
         },
@@ -185,11 +217,30 @@
           "named": true
         },
         {
+          "type": "shift_coords",
+          "named": true
+        },
+        {
           "type": "standalone_record_ref",
           "named": true
         },
         {
           "type": "tick",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "shift_coords",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "coords",
           "named": true
         }
       ]
@@ -221,6 +272,10 @@
           "named": true
         },
         {
+          "type": "noise_channel",
+          "named": true
+        },
+        {
           "type": "observable_instruction",
           "named": true
         },
@@ -230,6 +285,10 @@
         },
         {
           "type": "repeat_block",
+          "named": true
+        },
+        {
+          "type": "shift_coords",
           "named": true
         },
         {
@@ -427,6 +486,10 @@
   },
   {
     "type": "S",
+    "named": false
+  },
+  {
+    "type": "SHIFT_COORDS",
     "named": false
   },
   {

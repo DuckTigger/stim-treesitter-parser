@@ -9,7 +9,9 @@ module.exports = grammar({
       $.detector_instruction,
       $.observable_instruction,
       $.gate_instruction,
+      $.noise_channel,
       $.qubit_coords,
+      $.shift_coords,
       $.tick,
       $.repeat_block,
       $.standalone_record_ref,
@@ -40,15 +42,27 @@ module.exports = grammar({
       'I', 'CX', 'CY', 'CZ', 'CNOT', 'SWAP', 'ISWAP', 'ISWAP_DAG',
       'XCX', 'XCY', 'XCZ', 'YCX', 'YCY', 'YCZ', 'ZCX', 'ZCY', 'ZCZ',
       'R', 'RX', 'RY', 'RZ',
+      'MPAD',
+    ),
+    noise_channel: $ => prec.right(seq(
+      $.noise_name,
+      optional($.coords),
+      repeat1($.target),
+    )),
+    noise_name: $ => choice(
       'X_ERROR', 'Y_ERROR', 'Z_ERROR',
       'PAULI_CHANNEL_1', 'PAULI_CHANNEL_2',
       'DEPOLARIZE1', 'DEPOLARIZE2',
-      'E', 'ELSE_CORRELATED_ERROR', 'MPAD',
+      'E', 'ELSE_CORRELATED_ERROR',
     ),
     qubit_coords: $ => seq(
       'QUBIT_COORDS',
       $.coords,
       $.integer
+    ),
+    shift_coords: $ => seq(
+      'SHIFT_COORDS',
+      $.coords
     ),
     tick: $ => 'TICK',
     repeat_block: $ => seq(

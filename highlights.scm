@@ -15,16 +15,21 @@
 (record_ref) @variable.builtin
 (standalone_record_ref) @variable.builtin
 
-;; Gate instructions with different colors for gate types
+;; Gate instructions
 (gate_instruction
-  (gate_name) @keyword.operator)
+  (gate_name) @function.method)
+
+;; Noise channels
+(noise_channel
+  (noise_name) @keyword.operator)
 
 ;; Control flow
 (tick) @keyword.control
 (repeat_block) @keyword.control.repeat
 
 ;; Coordinates and structure
-(qubit_coords) @keyword.function
+(qubit_coords) @type.builtin
+(shift_coords) @type.definition
 (coords) @number.float
 
 ;; Targets

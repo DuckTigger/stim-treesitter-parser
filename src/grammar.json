@@ -30,7 +30,15 @@
         },
         {
           "type": "SYMBOL",
+          "name": "noise_channel"
+        },
+        {
+          "type": "SYMBOL",
           "name": "qubit_coords"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "shift_coords"
         },
         {
           "type": "SYMBOL",
@@ -320,6 +328,47 @@
         },
         {
           "type": "STRING",
+          "value": "MPAD"
+        }
+      ]
+    },
+    "noise_channel": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "noise_name"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "coords"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
+            "type": "REPEAT1",
+            "content": {
+              "type": "SYMBOL",
+              "name": "target"
+            }
+          }
+        ]
+      }
+    },
+    "noise_name": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "STRING",
           "value": "X_ERROR"
         },
         {
@@ -353,10 +402,6 @@
         {
           "type": "STRING",
           "value": "ELSE_CORRELATED_ERROR"
-        },
-        {
-          "type": "STRING",
-          "value": "MPAD"
         }
       ]
     },
@@ -374,6 +419,19 @@
         {
           "type": "SYMBOL",
           "name": "integer"
+        }
+      ]
+    },
+    "shift_coords": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "SHIFT_COORDS"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "coords"
         }
       ]
     },
