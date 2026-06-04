@@ -15,6 +15,7 @@ This plugin depends on `nvim-treesitter`. If you don't already have it, Lazy wil
 ```lua
 {
   "DuckTigger/stim-treesitter-parser",
+  event = "VeryLazy",  -- required if your setup lazy-loads by default (e.g. NvChad)
   dependencies = { "nvim-treesitter/nvim-treesitter" },
   config = function()
     require('stim-treesitter-config').setup({
@@ -25,6 +26,10 @@ This plugin depends on `nvim-treesitter`. If you don't already have it, Lazy wil
   end,
 }
 ```
+
+> **NvChad / lazy-by-default setups**: the `event = "VeryLazy"` line is important.
+> Without it the plugin never loads, so `:TSInstall stim` will report
+> "Parser not available for language stim".
 
 After installing, compile the parser:
 ```vim
