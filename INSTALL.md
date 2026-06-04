@@ -36,6 +36,16 @@ After installing, compile the parser:
 :TSInstall stim
 ```
 
+> **NvChad / distributions that use nvim-treesitter's highlight module**: if syntax
+> highlighting doesn't appear after `TSInstall stim`, add this to
+> `~/.config/nvim/ftplugin/stim.lua` (create the file if it doesn't exist):
+> ```lua
+> pcall(vim.treesitter.start)
+> ```
+> This is needed because nvim-treesitter's highlight module only activates
+> parsers it knew about at startup — custom parsers installed later must be
+> started explicitly per-buffer.
+
 ### Available commands
 
 | Command | Description |
