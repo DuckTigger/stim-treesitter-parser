@@ -271,7 +271,7 @@ function M.highlight_measurement()
 					)
 				else
 					-- Fallback to highlighting the entire line if no target info available
-					local start_row, _, end_row, _ = measurement.node:range()
+					local start_row, _, _, _ = measurement.node:range()
 					vim.api.nvim_buf_add_highlight(bufnr, ns_id, "StimMeasurementHighlight", start_row, 0, -1)
 				end
 				break
@@ -615,7 +615,7 @@ end
 -- Function to check if Tree-sitter parser is available
 function M.check_parser()
 	local bufnr = vim.api.nvim_get_current_buf()
-	local ok, parser = pcall(vim.treesitter.get_parser, bufnr, "stim")
+	local ok, _ = pcall(vim.treesitter.get_parser, bufnr, "stim")
 
 	if not ok then
 		vim.notify(
