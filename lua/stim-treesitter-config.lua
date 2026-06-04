@@ -47,6 +47,28 @@ function M.setup(opts)
 	vim.treesitter.language.register("stim", "stim")
 	vim.filetype.add({ extension = { stim = "stim" } })
 
+	-- Enable treesitter highlighting for stim buffers.
+	-- nvim-treesitter's highlight module only activates for filetypes it knew
+	-- about at initialisation time. Since stim is a custom parser, we start it
+	-- explicitly per-buffer. This works with both old (configs.setup) and new
+	-- (v1.0+) nvim-treesitter APIs, and plays nicely with NvChad.
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = "stim",
+		callback = function(args)
+			pcall(vim.treesitter.start, args.buf)
+		end,
+	})
+
+	-- Also start highlighting in any stim buffers already open (e.g. if setup()
+	-- is called after the file was loaded).
+	for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+		if vim.api.nvim_buf_is_loaded(buf)
+			and vim.api.nvim_get_option_value("filetype", { buf = buf }) == "stim"
+		then
+			pcall(vim.treesitter.start, buf)
+		end
+	end
+
 	if opts.highlight_measurements then
 		require("stim-treesitter").setup()
 		if opts.keymaps.show_info then
