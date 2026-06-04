@@ -4,7 +4,7 @@ This guide will help you install and set up the tree-sitter grammar for Stim qua
 
 ## Requirements
 
-- **Neovim** 0.9+
+- **Neovim** 0.12+
 - **[nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)** — required; handles parser compilation and highlighting
 - **A C compiler** (`gcc` or `clang`) — needed by nvim-treesitter to compile the Stim parser on first install
 
@@ -67,6 +67,7 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- For Neovim 0.12+:
 require("lazy").setup({
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
   {
