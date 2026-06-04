@@ -10,7 +10,6 @@ local current_buffer = nil
 local cursor_pos = { 1, 0 }
 
 -- Mock namespaces
-local namespaces = {}
 local namespace_counter = 0
 
 -- Mock highlights
@@ -111,9 +110,8 @@ function mock_vim.api.nvim_win_set_cursor(winid, pos)
 	cursor_pos = pos
 end
 
-function mock_vim.api.nvim_create_namespace(name)
+function mock_vim.api.nvim_create_namespace(name) -- luacheck: ignore name
 	namespace_counter = namespace_counter + 1
-	namespaces[name] = namespace_counter
 	return namespace_counter
 end
 
@@ -317,7 +315,6 @@ function mock_vim.reset()
 	buffer_counter = 0
 	current_buffer = nil
 	cursor_pos = { 1, 0 }
-	namespaces = {}
 	namespace_counter = 0
 	highlights = {}
 	-- Restore ui.input to default (cancel)

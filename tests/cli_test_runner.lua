@@ -41,7 +41,6 @@ local function create_mock_stim_treesitter()
 
 				-- Count repeat multipliers
 				local repeat_multiplier = 1
-				local indent_level = 0
 
 				-- Simple repeat detection by looking at previous lines
 				for i = line_idx - 1, 1, -1 do
