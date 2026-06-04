@@ -27,24 +27,25 @@ This plugin depends on `nvim-treesitter`. If you don't already have it, Lazy wil
 }
 ```
 
-> **NvChad / lazy-by-default setups**: the `event = "VeryLazy"` line is important.
-> Without it the plugin never loads, so `:TSInstall stim` will report
-> "Parser not available for language stim".
+> **NvChad users**: two extra steps are needed:
+>
+> 1. `event = "VeryLazy"` on the plugin spec (already shown above) so `:TSInstall stim` works.
+>
+> 2. Enable the treesitter highlight module in your treesitter overrides
+>    (`lua/configs/overrides.lua` or equivalent):
+>    ```lua
+>    M.treesitter = {
+>      -- ... your existing config ...
+>      highlight = { enable = true },
+>    }
+>    ```
+>    NvChad ships with the highlight module **disabled** by default. Without this,
+>    no treesitter syntax colours appear for any language, including stim.
 
 After installing, compile the parser:
 ```vim
 :TSInstall stim
 ```
-
-> **NvChad / distributions that use nvim-treesitter's highlight module**: if syntax
-> highlighting doesn't appear after `TSInstall stim`, add this to
-> `~/.config/nvim/ftplugin/stim.lua` (create the file if it doesn't exist):
-> ```lua
-> pcall(vim.treesitter.start)
-> ```
-> This is needed because nvim-treesitter's highlight module only activates
-> parsers it knew about at startup — custom parsers installed later must be
-> started explicitly per-buffer.
 
 ### Available commands
 
