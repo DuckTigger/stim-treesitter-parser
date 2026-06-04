@@ -2,7 +2,116 @@
 
 This guide will help you install and set up the tree-sitter grammar for Stim quantum circuit files.
 
-## Prerequisites
+## Requirements
+
+- **Neovim** 0.9+
+- **[nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)** — required; handles parser compilation and highlighting
+- **A C compiler** (`gcc` or `clang`) — needed by nvim-treesitter to compile the Stim parser on first install
+
+## Quick Install with Lazy.nvim (Recommended)
+
+This plugin depends on `nvim-treesitter`. If you don't already have it, Lazy will install it automatically via the `dependencies` field below.
+
+```lua
+{
+  "DuckTigger/stim-treesitter-parser",
+  dependencies = { "nvim-treesitter/nvim-treesitter" },
+  config = function()
+    require('stim-treesitter-config').setup({
+      -- All options are optional; these are the defaults:
+      highlight_measurements = true,
+      keymaps = { show_info = "<leader>si" },
+    })
+  end,
+}
+```
+
+After installing, compile the parser:
+```vim
+:TSInstall stim
+```
+
+### Available commands
+
+| Command | Description |
+|---|---|
+| `:StimInfoTS` | Show measurement info under cursor |
+| `:StimCheckParser` | Check tree-sitter parser status |
+| `:'<,'>StimShiftRecords` | Shift `rec[N]` indices in visual selection |
+
+Default keymaps (set in `setup()`):
+
+| Key | Mode | Action |
+|---|---|---|
+| `<leader>si` | Normal | Show measurement info |
+| `<leader>sr` | Visual | Shift records |
+
+## Testing the install in an isolated environment
+
+You can test this plugin without touching your real Neovim config using `NVIM_APPNAME` (Neovim 0.9+), which redirects all config and data paths to a separate directory.
+
+### 1. Create a minimal config
+
+```bash
+mkdir -p ~/.config/nvim-stim-test/lua
+```
+
+Create `~/.config/nvim-stim-test/init.lua`:
+
+```lua
+-- Bootstrap Lazy.nvim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({ "git", "clone", "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git", "--branch=stable", lazypath })
+end
+vim.opt.rtp:prepend(lazypath)
+
+require("lazy").setup({
+  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+  {
+    "DuckTigger/stim-treesitter-parser",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    config = function()
+      require('stim-treesitter-config').setup()
+    end,
+  },
+})
+```
+
+### 2. Launch the isolated instance
+
+```bash
+NVIM_APPNAME=nvim-stim-test nvim
+```
+
+This uses `~/.config/nvim-stim-test/` and `~/.local/share/nvim-stim-test/` — completely separate from your real config. Your existing setup is untouched.
+
+### 3. Install everything
+
+Inside that Neovim instance:
+```vim
+:Lazy sync
+:TSInstall stim
+```
+
+### 4. Test it
+
+```bash
+NVIM_APPNAME=nvim-stim-test nvim test.stim
+```
+
+Try `:StimCheckParser`, `:StimInfoTS`, and `<leader>sr` in visual mode.
+
+### 5. Clean up when done
+
+```bash
+rm -rf ~/.config/nvim-stim-test ~/.local/share/nvim-stim-test ~/.cache/nvim-stim-test
+```
+
+---
+
+## Prerequisites (manual installation)
 
 - **Neovim** (0.8+ with tree-sitter support)
 - **Node.js and npm** (for building the grammar)

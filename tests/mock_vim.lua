@@ -32,12 +32,32 @@ end
 
 function mock_vim.api.nvim_buf_set_lines(bufnr, start, end_line, strict_indexing, replacement)
     if not buffers[bufnr] then return end
-    buffers[bufnr].lines = replacement
+    local lines = buffers[bufnr].lines or {}
+    -- Neovim semantics: start/end_line are 0-indexed, end_line exclusive, -1 = end of buffer
+    if end_line == -1 then end_line = #lines end
+    local new_lines = {}
+    for i = 1, start do
+        table.insert(new_lines, lines[i])
+    end
+    for _, line in ipairs(replacement) do
+        table.insert(new_lines, line)
+    end
+    for i = end_line + 1, #lines do
+        table.insert(new_lines, lines[i])
+    end
+    buffers[bufnr].lines = new_lines
 end
 
 function mock_vim.api.nvim_buf_get_lines(bufnr, start, end_line, strict_indexing)
     if not buffers[bufnr] then return {} end
-    return buffers[bufnr].lines or {}
+    local lines = buffers[bufnr].lines or {}
+    -- Neovim semantics: start/end_line are 0-indexed, end_line exclusive, -1 = end of buffer
+    if end_line == -1 then end_line = #lines end
+    local result = {}
+    for i = start + 1, end_line do
+        table.insert(result, lines[i])
+    end
+    return result
 end
 
 function mock_vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, opts)
@@ -130,6 +150,47 @@ function mock_vim.api.nvim_get_commands(opts)
         StimInfoTS = {name = "StimInfoTS"},
         StimCheckParser = {name = "StimCheckParser"}
     }
+end
+
+-- Mock vim.ui (input prompt)
+mock_vim.ui = {}
+
+-- Default: simulate user pressing <Esc> (cancels).
+-- Override with mock_vim.set_ui_inputs({...}) for sequential predetermined responses.
+function mock_vim.ui.input(opts, callback)
+    callback(nil)
+end
+
+-- Set up a sequence of predetermined inputs for vim.ui.input calls.
+-- Each call to vim.ui.input will consume the next value in the list.
+-- nil in the list simulates the user pressing <Esc>.
+function mock_vim.set_ui_inputs(inputs)
+    local i = 0
+    mock_vim.ui.input = function(opts, callback)
+        i = i + 1
+        callback(inputs[i])
+    end
+end
+
+-- Mock vim.keymap
+mock_vim.keymap = {}
+function mock_vim.keymap.set(mode, lhs, rhs, opts) end
+
+-- Mock vim.tbl_extend
+function mock_vim.tbl_extend(behaviour, ...)
+    local result = {}
+    for _, t in ipairs({...}) do
+        for k, v in pairs(t) do
+            result[k] = v
+        end
+    end
+    return result
+end
+
+-- Mock vim.defer_fn
+function mock_vim.defer_fn(fn, delay)
+    -- In tests run synchronously; don't call fn automatically.
+    return { stop = function() end }
 end
 
 -- Mock vim.fn functions
@@ -239,6 +300,8 @@ function mock_vim.reset()
     namespaces = {}
     namespace_counter = 0
     highlights = {}
+    -- Restore ui.input to default (cancel)
+    mock_vim.ui.input = function(opts, callback) callback(nil) end
 end
 
 function mock_vim.get_buffer_content(bufnr)

@@ -321,6 +321,165 @@ function M.show_info()
     ), vim.log.levels.WARN)
 end
 
+-- Count the number of measurement targets on a single line.
+-- Handles M, MX, MY, MZ, MPP (with optional error-param like MZ(0.001)).
+-- For MX/MY/MZ/M each space-separated token is one measurement;
+-- for MPP each space-separated Pauli-product term is one measurement.
+local function count_measurement_targets(line)
+    local gate = line:match('^%s*(%u+)')
+    if not gate then return 0 end
+    local valid = { M = true, MX = true, MY = true, MZ = true, MPP = true }
+    if not valid[gate] then return 0 end
+    -- Skip optional parameter group e.g. (0.001), then collect remaining tokens
+    local rest = line:match('^%s*%u+%b()%s+(.*)') or line:match('^%s*%u+%s+(.*)')
+    if not rest then return 0 end
+    local count = 0
+    for _ in rest:gmatch('%S+') do count = count + 1 end
+    return count
+end
+
+-- Compute the default threshold for StimShiftRecords given a visual selection.
+-- Returns (n_measurements, n_detectors):
+--   n_measurements = targets between the previous DETECTOR group and the first
+--                    DETECTOR in the selection (exclusive on both ends).
+--   n_detectors    = number of DETECTOR lines in the selection.
+-- Returns (nil, nil) if no DETECTOR is found in the selection.
+local function calculate_threshold_default(bufnr, line1, line2)
+    local all_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    -- all_lines[i] is buffer line i (1-indexed Lua array)
+
+    local first_det = nil
+    for i = line1, line2 do
+        if all_lines[i] and all_lines[i]:match('^%s*DETECTOR') then
+            first_det = i
+            break
+        end
+    end
+    if not first_det then return nil, nil end
+
+    local n_det = 0
+    for i = line1, line2 do
+        if all_lines[i] and all_lines[i]:match('^%s*DETECTOR') then
+            n_det = n_det + 1
+        end
+    end
+
+    -- Walk backwards to find the nearest DETECTOR before the selection
+    local prev_det = nil
+    for i = first_det - 1, 1, -1 do
+        if all_lines[i] and all_lines[i]:match('^%s*DETECTOR') then
+            prev_det = i
+            break
+        end
+    end
+
+    local scan_from = prev_det and (prev_det + 1) or 1
+    local n_meas = 0
+    for i = scan_from, first_det - 1 do
+        if all_lines[i] then
+            n_meas = n_meas + count_measurement_targets(all_lines[i])
+        end
+    end
+
+    return n_meas, n_det
+end
+
+-- Shift rec[N] indices in the selected range.
+-- Records with index < threshold are shifted by subtracting shift_amount.
+-- Equivalent to the Vim command:
+--   :'<,'>s/\vrec\[(-?\d+)\]/\=submatch(1)<threshold ? 'rec['.(submatch(1)-shift).']' : submatch(0)/g
+-- When no threshold is entered, defaults to -(number of DETECTORs in selection),
+-- cross-checked against the measurement count between detector groups.
+function M.shift_records(line1, line2)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local n_meas, n_det = calculate_threshold_default(bufnr, line1, line2)
+
+    local default_threshold = nil
+    local threshold_prompt
+    if n_meas ~= nil and n_det ~= nil then
+        -- Use detector count as authoritative; warn if it disagrees with measurement count
+        default_threshold = -n_det
+        if n_meas ~= n_det then
+            threshold_prompt = string.format(
+                'Threshold [WARNING: %d measurements ≠ %d detectors; using -%d]: ',
+                n_meas, n_det, n_det
+            )
+        else
+            threshold_prompt = string.format(
+                'Threshold [default -%d (%d measurements = %d detectors)]: ',
+                n_det, n_meas, n_det
+            )
+        end
+    else
+        threshold_prompt = 'Threshold (shift records with index < this, e.g. -16): '
+    end
+
+    vim.ui.input(
+        { prompt = threshold_prompt, default = default_threshold and tostring(default_threshold) or '' },
+        function(threshold_str)
+            if threshold_str == nil then return end  -- user cancelled with <Esc>
+            local threshold
+            if threshold_str == '' then
+                threshold = default_threshold
+            else
+                threshold = tonumber(threshold_str)
+            end
+            if not threshold then
+                vim.notify('StimShiftRecords: invalid threshold', vim.log.levels.ERROR)
+                return
+            end
+
+            vim.ui.input(
+                { prompt = 'Shift amount (subtracted from index, e.g. 2): ' },
+                function(shift_str)
+                    if not shift_str or shift_str == '' then return end
+                    local shift = tonumber(shift_str)
+                    if not shift then
+                        vim.notify('StimShiftRecords: invalid shift amount', vim.log.levels.ERROR)
+                        return
+                    end
+
+                    local changed = M._apply_shift(bufnr, line1, line2, threshold, shift)
+
+                    if changed > 0 then
+                        vim.notify(string.format(
+                            'StimShiftRecords: shifted %d record(s) (threshold=%d, shift=%d)',
+                            changed, threshold, shift
+                        ), vim.log.levels.INFO)
+                    else
+                        vim.notify('StimShiftRecords: no records matched', vim.log.levels.INFO)
+                    end
+                end
+            )
+        end
+    )
+end
+
+-- Non-interactive core: applies threshold/shift to lines [line1,line2] in bufnr.
+-- Returns the number of rec[] tokens that were changed.
+function M._apply_shift(bufnr, line1, line2, threshold, shift)
+    local lines = vim.api.nvim_buf_get_lines(bufnr, line1 - 1, line2, false)
+    local changed = 0
+    for i, line in ipairs(lines) do
+        if not line:match('^%s*#') then
+            lines[i] = line:gsub('rec%[(-?%d+)%]', function(idx_str)
+                local idx = tonumber(idx_str)
+                if idx and idx < threshold then
+                    changed = changed + 1
+                    return 'rec[' .. (idx - shift) .. ']'
+                end
+                return 'rec[' .. idx_str .. ']'
+            end)
+        end
+    end
+    vim.api.nvim_buf_set_lines(bufnr, line1 - 1, line2, false, lines)
+    return changed
+end
+
+-- Expose pure helpers for testing
+M._count_measurement_targets  = count_measurement_targets
+M._calculate_threshold_default = calculate_threshold_default
+
 -- Setup function
 function M.setup()
     -- Define highlight groups
@@ -374,6 +533,13 @@ function M.setup()
         desc = 'Show coordinates for the qubit number under cursor'
     })
 
+    vim.api.nvim_create_user_command('StimShiftRecords', function(opts)
+        M.shift_records(opts.line1, opts.line2)
+    end, {
+        range = true,
+        desc = 'Shift rec[] indices in the visual selection by a given amount'
+    })
+
 
     -- Set up key mappings for .stim files
     vim.api.nvim_create_autocmd('FileType', {
@@ -385,6 +551,10 @@ function M.setup()
             -- <leader>sq - Show qubit coordinates
             vim.keymap.set('n', '<leader>sq', M.show_qubit_coords,
                 vim.tbl_extend('force', opts, { desc = 'Show qubit coordinates' }))
+
+            -- <leader>sr - Shift rec[] indices in visual selection
+            vim.keymap.set('v', '<leader>sr', ":'<,'>StimShiftRecords<CR>",
+                vim.tbl_extend('force', opts, { desc = 'Shift measurement record indices' }))
         end
     })
 end
