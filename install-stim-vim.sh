@@ -69,6 +69,10 @@ cat > "$CONFIG_DIR/init.lua" << 'EOF'
 -- stim-vim: standalone Neovim app for Stim quantum circuit files
 -- Managed by install-stim-vim.sh
 
+-- ── leader (must be set before lazy / any plugin) ─────────────────────────
+vim.g.mapleader      = " "
+vim.g.maplocalleader = " "
+
 -- ── editor settings ────────────────────────────────────────────────────────
 vim.opt.number         = true
 vim.opt.relativenumber = true
@@ -201,12 +205,13 @@ else
     echo -e "    ${BOLD}$WRAPPER circuit.stim${RESET}"
 fi
 echo
-echo "  Commands inside stim-vim:"
+echo "  Commands inside stim-vim (leader key = Space):"
 echo "    :TSInstall stim      re-compile parser"
 echo "    :StimInfoTS          measurement info under cursor"
 echo "    :StimCheckParser     parser status"
-echo "    <leader>sr           shift rec[] indices (visual mode)"
-echo "    <leader>si           show measurement info"
+echo "    <Space>si            show measurement info"
+echo "    <Space>sq            show qubit coordinates"
+echo "    <Space>sr            shift rec[] indices (visual mode)"
 echo
 echo "  To uninstall:"
 echo -e "    ${BOLD}bash install-stim-vim.sh --uninstall${RESET}"
