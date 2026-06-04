@@ -80,12 +80,12 @@ jobs:
 
     - name: Lint Lua files
       run: |
-        luacheck *.lua --ignore 113 --ignore 212 --ignore 213
+        luacheck lua/*.lua --ignore 113 --ignore 212 --ignore 213
         luacheck tests/*.lua --ignore 113 --ignore 212 --ignore 213
 
     - name: Check file permissions
       run: |
-        find . -name "*.lua" -type f ! -perm 644 -exec ls -la {} \; | tee perm_issues.txt
+        find . -name "lua/*.lua" -type f ! -perm 644 -exec ls -la {} \; | tee perm_issues.txt
         if [ -s perm_issues.txt ]; then
           echo "❌ Some Lua files have incorrect permissions"
           exit 1
