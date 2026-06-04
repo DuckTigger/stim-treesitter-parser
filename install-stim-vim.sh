@@ -134,6 +134,26 @@ require("lazy").setup({
     end,
   },
 
+  -- which-key: shows available keybindings in a popup
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    config = function()
+      local wk = require("which-key")
+      wk.setup({
+        preset = "modern",
+        delay  = 300,
+      })
+      -- Register the <leader>s group with descriptions
+      wk.add({
+        { "<leader>s",  group = "stim",                               icon = "⚛" },
+        { "<leader>si", desc  = "Show measurement info under cursor"             },
+        { "<leader>sq", desc  = "Show qubit coordinates"                         },
+        { "<leader>sr", desc  = "Shift rec[] indices",  mode = "v"               },
+      })
+    end,
+  },
+
 }, { ui = { backdrop = 100 } })
 
 -- ── enable treesitter highlighting for stim files ─────────────────────────
