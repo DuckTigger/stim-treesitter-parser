@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# install-stim-viewer.sh
+# install-stim-vim.sh
 #
-# Creates a standalone "stim-viewer" Neovim app for viewing/editing Stim
+# Creates a standalone "stim-vim" Neovim app for viewing/editing Stim
 # quantum circuit files. Uses NVIM_APPNAME isolation — your existing Neovim
 # config is never touched.
 #
 # Requirements: nvim (0.12+), git, a C compiler (gcc or clang)
 #
 # Usage:
-#   bash install-stim-viewer.sh            # install
-#   bash install-stim-viewer.sh --uninstall
+#   bash install-stim-vim.sh            # install
+#   bash install-stim-vim.sh --uninstall
 
 set -euo pipefail
 
-APP_NAME="stim-viewer"
+APP_NAME="stim-vim"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/$APP_NAME"
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/$APP_NAME"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/$APP_NAME"
@@ -23,17 +23,17 @@ WRAPPER="$BIN_DIR/$APP_NAME"
 # ── colours ────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
-info()    { echo -e "${CYAN}[stim-viewer]${RESET} $*"; }
-success() { echo -e "${GREEN}[stim-viewer]${RESET} $*"; }
-warn()    { echo -e "${YELLOW}[stim-viewer]${RESET} $*"; }
-die()     { echo -e "${RED}[stim-viewer]${RESET} $*" >&2; exit 1; }
+info()    { echo -e "${CYAN}[stim-vim]${RESET} $*"; }
+success() { echo -e "${GREEN}[stim-vim]${RESET} $*"; }
+warn()    { echo -e "${YELLOW}[stim-vim]${RESET} $*"; }
+die()     { echo -e "${RED}[stim-vim]${RESET} $*" >&2; exit 1; }
 
 # ── uninstall ──────────────────────────────────────────────────────────────
 if [[ "${1:-}" == "--uninstall" ]]; then
-    info "Removing stim-viewer..."
+    info "Removing stim-vim..."
     rm -rf "$CONFIG_DIR" "$DATA_DIR" "$CACHE_DIR"
     rm -f "$WRAPPER"
-    success "stim-viewer removed."
+    success "stim-vim removed."
     exit 0
 fi
 
@@ -66,8 +66,8 @@ info "Creating config in $CONFIG_DIR ..."
 mkdir -p "$CONFIG_DIR"
 
 cat > "$CONFIG_DIR/init.lua" << 'EOF'
--- stim-viewer: standalone Neovim app for Stim quantum circuit files
--- Managed by install-stim-viewer.sh
+-- stim-vim: standalone Neovim app for Stim quantum circuit files
+-- Managed by install-stim-vim.sh
 
 -- ── editor settings ────────────────────────────────────────────────────────
 vim.opt.number         = true
@@ -159,7 +159,7 @@ NVIM_APPNAME=$APP_NAME nvim --headless -c "lua
   local task = install.install({'stim'}, { force = false })
   task:await(function(err)
     if err then
-      io.stderr:write('[stim-viewer] parser error: ' .. tostring(err) .. '\n')
+      io.stderr:write('[stim-vim] parser error: ' .. tostring(err) .. '\n')
     end
     vim.cmd('q')
   end)
@@ -178,7 +178,7 @@ info "Creating wrapper script at $WRAPPER ..."
 mkdir -p "$BIN_DIR"
 cat > "$WRAPPER" << WRAPPER_EOF
 #!/usr/bin/env bash
-# stim-viewer: standalone Neovim app for Stim quantum circuit files
+# stim-vim: standalone Neovim app for Stim quantum circuit files
 exec env NVIM_APPNAME=$APP_NAME nvim "\$@"
 WRAPPER_EOF
 chmod +x "$WRAPPER"
@@ -189,7 +189,7 @@ echo
 if echo ":$PATH:" | grep -q ":$BIN_DIR:"; then
     success "${BOLD}Installation complete!${RESET}"
     echo
-    echo -e "  Usage:  ${BOLD}stim-viewer circuit.stim${RESET}"
+    echo -e "  Usage:  ${BOLD}stim-vim circuit.stim${RESET}"
 else
     success "${BOLD}Installation complete!${RESET}"
     echo
@@ -201,7 +201,7 @@ else
     echo -e "    ${BOLD}$WRAPPER circuit.stim${RESET}"
 fi
 echo
-echo "  Commands inside stim-viewer:"
+echo "  Commands inside stim-vim:"
 echo "    :TSInstall stim      re-compile parser"
 echo "    :StimInfoTS          measurement info under cursor"
 echo "    :StimCheckParser     parser status"
@@ -209,4 +209,4 @@ echo "    <leader>sr           shift rec[] indices (visual mode)"
 echo "    <leader>si           show measurement info"
 echo
 echo "  To uninstall:"
-echo -e "    ${BOLD}bash install-stim-viewer.sh --uninstall${RESET}"
+echo -e "    ${BOLD}bash install-stim-vim.sh --uninstall${RESET}"
