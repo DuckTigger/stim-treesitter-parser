@@ -358,36 +358,3 @@ stim-tresitter/
 ├── stim-treesitter.lua # Neovim plugin
 └── stim.so            # Compiled parser (after tree-sitter build)
 ```
-
-## Alternative Installation Paths
-
-If the standard installation doesn't work, try these paths:
-
-### For nvim-treesitter users:
-```bash
-# Find your nvim-treesitter installation
-find ~/.local/share/nvim -name "nvim-treesitter" -type d
-
-# Copy parser to the found directory
-cp stim.so ~/.local/share/nvim/site/pack/packer/start/nvim-treesitter/parser/
-```
-
-### For manual installations:
-```bash
-# Common Neovim data directories
-~/.local/share/nvim/tree-sitter-parsers/
-~/.config/nvim/parser/
-~/.local/share/nvim/site/parser/
-```
-
-## Next Steps
-
-Once installed, you'll have:
-
-- ✅ **Syntax highlighting** for .stim files
-- ✅ **Tree-sitter parsing** for code structure
-- ✅ **Record reference highlighting** (via stim-treesitter.lua)
-- ✅ **Measurement tracking** with REPEAT block support
-- ✅ **Info commands** for debugging circuits
-
-The installation provides the foundation for working with Stim quantum circuit files in Neovim with full IDE-like features.
