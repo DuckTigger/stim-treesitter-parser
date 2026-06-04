@@ -1,6 +1,32 @@
 -- Stim Tree-sitter configuration
--- Parser registration is handled by plugin/stim-treesitter.lua at load time.
+-- Parser registration is also handled by plugin/stim-treesitter.lua at load time,
+-- but we register here too as a fallback for unusual loading orders.
 local M = {}
+
+local STIM_PARSER_ENTRY = {
+	install_info = {
+		url = "https://github.com/DuckTigger/stim-treesitter-parser",
+		files = { "src/parser.c" },
+		branch = "main",
+		generate_requires_npm = false,
+		requires_generate_from_grammar = false,
+	},
+	filetype = "stim",
+}
+
+local function register_parser()
+	local ok, parsers = pcall(require, "nvim-treesitter.parsers")
+	if not ok then
+		return
+	end
+	if type(parsers.get_parser_configs) == "function" then
+		parsers.get_parser_configs().stim = STIM_PARSER_ENTRY
+	elseif parsers.configs ~= nil then
+		parsers.configs.stim = STIM_PARSER_ENTRY
+	else
+		parsers.stim = STIM_PARSER_ENTRY
+	end
+end
 
 function M.setup(opts)
 	opts = opts or {}
@@ -15,8 +41,11 @@ function M.setup(opts)
 		return
 	end
 
-	-- Parser registration and filetype mapping are handled by plugin/stim-treesitter.lua
-	-- which runs at load time. Nothing to do here.
+	-- Ensure parser is registered (plugin/ handles this at load time, but
+	-- register here too in case of unusual lazy-loading order).
+	register_parser()
+	vim.treesitter.language.register("stim", "stim")
+	vim.filetype.add({ extension = { stim = "stim" } })
 
 	if opts.highlight_measurements then
 		require("stim-treesitter").setup()

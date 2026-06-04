@@ -16,10 +16,10 @@ local STIM_PARSER_ENTRY = {
 	filetype = "stim",
 }
 
-local function register_parser()
+local function try_register()
 	local ok, parsers = pcall(require, "nvim-treesitter.parsers")
 	if not ok then
-		return
+		return false
 	end
 
 	if type(parsers.get_parser_configs) == "function" then
@@ -29,20 +29,26 @@ local function register_parser()
 	else
 		parsers.stim = STIM_PARSER_ENTRY
 	end
+	return true
 end
 
--- Register immediately on load
-register_parser()
+-- Try immediately (works if nvim-treesitter is already on rtp)
+try_register()
 
--- Re-register after every reload_parsers() call (nvim-treesitter wipes the
--- table internally during TSInstall/TSUpdate)
-vim.api.nvim_create_autocmd("User", {
-	pattern = "TSUpdate",
-	callback = register_parser,
+-- Retry after all plugins have loaded (catches lazy-loaded nvim-treesitter)
+vim.api.nvim_create_autocmd("VimEnter", {
+	once = true,
+	callback = try_register,
 })
 
--- Register the filetype mapping for Neovim's built-in treesitter API
+-- Register the filetype mapping for Neovim's built-in treesitter API.
+-- Guard against early sourcing before vim.treesitter is fully initialised.
 vim.filetype.add({ extension = { stim = "stim" } })
-if vim.treesitter and vim.treesitter.language then
-	vim.treesitter.language.register("stim", "stim")
-end
+vim.api.nvim_create_autocmd("VimEnter", {
+	once = true,
+	callback = function()
+		if vim.treesitter and vim.treesitter.language then
+			vim.treesitter.language.register("stim", "stim")
+		end
+	end,
+})
