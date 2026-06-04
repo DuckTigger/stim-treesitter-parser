@@ -41,9 +41,8 @@ vim.api.nvim_create_autocmd("VimEnter", {
 	callback = try_register,
 })
 
--- Register the filetype mapping for Neovim's built-in treesitter API.
--- Guard against early sourcing before vim.treesitter is fully initialised.
-vim.filetype.add({ extension = { stim = "stim" } })
+-- Register stim as a treesitter language alias for the stim filetype.
+-- ftdetect/stim.lua handles vim.filetype.add at startup.
 vim.api.nvim_create_autocmd("VimEnter", {
 	once = true,
 	callback = function()

@@ -45,7 +45,6 @@ function M.setup(opts)
 	-- register here too in case of unusual lazy-loading order).
 	register_parser()
 	vim.treesitter.language.register("stim", "stim")
-	vim.filetype.add({ extension = { stim = "stim" } })
 
 	-- Enable treesitter highlighting for stim buffers.
 	-- nvim-treesitter's highlight module only activates for filetypes it knew
