@@ -1,0 +1,10 @@
+# Fixture for shift_records tests
+# First detector group (round 0)
+MZ 0 1 2
+DETECTOR rec[-3] rec[-2] rec[-1]
+
+# Second detector group (round 1) - 3 measurements, 3 detectors
+MZ 0 1 2
+DETECTOR rec[-3] rec[-2] rec[-1]
+DETECTOR rec[-6] rec[-5] rec[-4]
+DETECTOR rec[-9] rec[-8] rec[-7]

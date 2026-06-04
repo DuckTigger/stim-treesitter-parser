@@ -10,7 +10,7 @@ if not script_path then
     -- Fallback for when debug info is not available
     script_path = "./"
 end
-package.path = script_path .. '?.lua;' .. script_path .. '../?.lua;' .. package.path
+package.path = script_path .. '?.lua;' .. script_path .. '../lua/?.lua;' .. package.path
 
 -- Initialize mock vim API
 local mock_vim = require('mock_vim')
@@ -27,7 +27,7 @@ local function create_mock_stim_treesitter()
         local measurement_count = 0
 
         local lines = {}
-        for line in content:gmatch("[^\n]*") do
+        for line in content:gmatch("[^\n]+") do
             table.insert(lines, line)
         end
 
@@ -82,7 +82,7 @@ local function create_mock_stim_treesitter()
         local col = cursor[2]
 
         local lines = {}
-        for line in content:gmatch("[^\n]*") do
+        for line in content:gmatch("[^\n]+") do
             table.insert(lines, line)
         end
 
@@ -186,14 +186,15 @@ local function run_all_tests()
         measurement_parsing = {},
         repeat_blocks = {},
         record_resolution = {},
-        integration = {}
+        integration = {},
+        shift_records = {}
     }
 
     -- Helper to create buffer with content for CLI
     local function create_test_buffer_cli(content)
         local bufnr = vim.api.nvim_create_buf(false, true)
         local lines = {}
-        for line in content:gmatch("[^\n]*") do
+        for line in content:gmatch("[^\n]+") do
             table.insert(lines, line)
         end
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
@@ -329,8 +330,17 @@ local function run_all_tests()
         return results
     end
 
+    -- Run shift_records tests (pure Lua logic, loads real module via dofile)
+    print("Running shift_records tests...")
+    local shift_ok, shift_tests = pcall(require, 'test_shift_records')
+    if shift_ok then
+        all_results.shift_records = shift_tests.run_tests()
+    else
+        print("  (skipped: " .. tostring(shift_tests) .. ")")
+    end
+
     -- Run the simplified tests
-    print("Running CLI-compatible tests...")
+    print("\nRunning CLI-compatible tests...")
     all_results.cli_basic = run_basic_tests()
 
     -- Calculate overall results

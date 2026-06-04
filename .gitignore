@@ -1,0 +1,7 @@
+# Compiled tree-sitter parser binaries
+*.so
+*.dylib
+*.dll
+
+# tree-sitter build artefacts
+build/

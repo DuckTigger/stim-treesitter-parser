@@ -96,6 +96,12 @@ echo "Exit code: $?"
 - ✅ Performance with larger circuits (100+ measurements)
 - ✅ Multiple buffer handling
 
+### Shift Records Tests (`test_shift_records.lua`)
+- ✅ `count_measurement_targets` — M, MX, MY, MZ, MPP (incl. error-rate params, leading whitespace)
+- ✅ `calculate_threshold_default` — matching and mismatched counts, no-previous-detector, non-measurement lines ignored
+- ✅ `_apply_shift` — threshold/boundary logic, multi-line ranges, partial selection, multiple records per line
+- ✅ `shift_records` (interactive) — prompt cancellation, explicit values, auto-computed default, invalid input handling
+
 ## Test Framework
 
 The tests use a simple custom testing framework with two modes:

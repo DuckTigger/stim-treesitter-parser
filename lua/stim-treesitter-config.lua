@@ -4,8 +4,6 @@ local M = {}
 function M.setup(opts)
     opts = opts or {}
     local defaults = {
-        grammar_path = vim.fn.expand("~/tree-sitter-stim"),
-        auto_install = true,
         highlight_measurements = true,
         keymaps = { show_info = "<leader>si" }
     }
@@ -20,7 +18,7 @@ function M.setup(opts)
     local parser_config = parsers.get_parser_configs()
     parser_config.stim = {
         install_info = {
-            url = opts.grammar_path,
+            url = "https://github.com/DuckTigger/stim-treesitter-parser",
             files = {"src/parser.c"},
             branch = "main",
             generate_requires_npm = false,
@@ -30,12 +28,6 @@ function M.setup(opts)
     }
     
     vim.filetype.add({ extension = { stim = "stim" } })
-    
-    -- if opts.auto_install then
-    --     vim.defer_fn(function()
-    --         pcall(vim.cmd, "TSInstallSync stim")
-    --     end, 100)
-    -- end
     
     if opts.highlight_measurements then
         require('stim-treesitter').setup()

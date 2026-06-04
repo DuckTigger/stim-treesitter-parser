@@ -2,7 +2,47 @@
 
 This guide will help you install and set up the tree-sitter grammar for Stim quantum circuit files.
 
-## Prerequisites
+## Quick Install with Lazy.nvim (Recommended)
+
+Add to your Lazy plugin spec. The plugin registers the `stim` tree-sitter parser with nvim-treesitter; run `:TSInstall stim` once to compile it.
+
+```lua
+{
+  "DuckTigger/stim-treesitter-parser",
+  dependencies = { "nvim-treesitter/nvim-treesitter" },
+  config = function()
+    require('stim-treesitter-config').setup({
+      -- All options are optional; these are the defaults:
+      highlight_measurements = true,
+      keymaps = { show_info = "<leader>si" },
+    })
+  end,
+}
+```
+
+After installing, run:
+```vim
+:TSInstall stim
+```
+
+### Available commands
+
+| Command | Description |
+|---|---|
+| `:StimInfoTS` | Show measurement info under cursor |
+| `:StimCheckParser` | Check tree-sitter parser status |
+| `:'<,'>StimShiftRecords` | Shift `rec[N]` indices in visual selection |
+
+Default keymaps (set in `setup()`):
+
+| Key | Mode | Action |
+|---|---|---|
+| `<leader>si` | Normal | Show measurement info |
+| `<leader>sr` | Visual | Shift records |
+
+---
+
+## Prerequisites (manual installation)
 
 - **Neovim** (0.8+ with tree-sitter support)
 - **Node.js and npm** (for building the grammar)

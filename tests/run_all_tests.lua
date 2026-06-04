@@ -12,7 +12,8 @@ local function run_all_tests()
         measurement_parsing = {},
         repeat_blocks = {},
         record_resolution = {},
-        integration = {}
+        integration = {},
+        shift_records = {}
     }
 
     -- Add current directory to package path so we can require test modules
@@ -35,6 +36,10 @@ local function run_all_tests()
     print("\nRunning integration tests...")
     local integration_tests = require('test_integration')
     all_results.integration = integration_tests.run_tests()
+
+    print("\nRunning shift_records tests...")
+    local shift_tests = require('test_shift_records')
+    all_results.shift_records = shift_tests.run_tests()
 
     -- Calculate overall results
     local total_tests = 0
