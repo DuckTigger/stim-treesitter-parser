@@ -41,6 +41,13 @@ This plugin depends on `nvim-treesitter`. If you don't already have it, Lazy wil
 >    ```
 >    NvChad ships with the highlight module **disabled** by default. Without this,
 >    no treesitter syntax colours appear for any language, including stim.
+>
+> 3. If highlighting still doesn't appear after `:TSInstall stim`, add these lines
+>    to your `init.lua` (after `require("lazy").setup(...)`):
+>    ```lua
+>    vim.treesitter.language.register("stim", "stim")
+>    vim.filetype.add({ extension = { stim = "stim" } })
+>    ```
 
 After installing, compile the parser:
 ```vim
