@@ -15,7 +15,6 @@ This plugin depends on `nvim-treesitter`. If you don't already have it, Lazy wil
 ```lua
 {
   "DuckTigger/stim-treesitter-parser",
-  event = "VeryLazy",  -- required if your setup lazy-loads by default (e.g. NvChad)
   dependencies = { "nvim-treesitter/nvim-treesitter" },
   config = function()
     require('stim-treesitter-config').setup({
@@ -27,32 +26,17 @@ This plugin depends on `nvim-treesitter`. If you don't already have it, Lazy wil
 }
 ```
 
-> **NvChad users**: two extra steps are needed:
->
-> 1. `event = "VeryLazy"` on the plugin spec (already shown above) so `:TSInstall stim` works.
->
-> 2. Enable the treesitter highlight module in your treesitter overrides
->    (`lua/configs/overrides.lua` or equivalent):
->    ```lua
->    M.treesitter = {
->      -- ... your existing config ...
->      highlight = { enable = true },
->    }
->    ```
->    NvChad ships with the highlight module **disabled** by default. Without this,
->    no treesitter syntax colours appear for any language, including stim.
->
-> 3. If highlighting still doesn't appear after `:TSInstall stim`, add these lines
->    to your `init.lua` (after `require("lazy").setup(...)`):
->    ```lua
->    vim.treesitter.language.register("stim", "stim")
->    vim.filetype.add({ extension = { stim = "stim" } })
->    ```
-
 After installing, compile the parser:
 ```vim
 :TSInstall stim
 ```
+
+> **Troubleshooting**: if syntax highlighting doesn't appear after `:TSInstall stim`, add
+> these two lines to your `init.lua` (after `require("lazy").setup(...)`):
+> ```lua
+> vim.treesitter.language.register("stim", "stim")
+> vim.filetype.add({ extension = { stim = "stim" } })
+> ```
 
 ### Available commands
 
