@@ -6,6 +6,11 @@
 
 ;; Measurement instructions
 (measurement_instruction) @function.call
+(mpp_instruction) @function.call
+
+;; MPP targets
+(mpp_target) @variable.parameter
+(pauli_target) @variable.parameter
 
 ;; Detector and Observable instructions
 (detector_instruction) @type.builtin

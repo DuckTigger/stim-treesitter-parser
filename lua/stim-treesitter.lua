@@ -52,6 +52,7 @@ local function parse_measurements_ts(bufnr)
 	-- Query for measurement instructions
 	local query_string = [[
         (measurement_instruction) @measurement
+        (mpp_instruction) @measurement
     ]]
 
 	local ok, query = pcall(vim.treesitter.query.parse, "stim", query_string)
@@ -64,10 +65,14 @@ local function parse_measurements_ts(bufnr)
 		local text = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
 		text = text[1] or ""
 
-		-- Extract individual target qubits with their positions
+		-- Extract individual targets with their positions.
+		-- For mpp_instruction, each mpp_target child is one measurement.
+		-- For measurement_instruction, each target child is one measurement.
 		local targets = {}
+		local is_mpp = node:type() == "mpp_instruction"
 		for child in node:iter_children() do
-			if child:type() == "target" then
+			local child_type = child:type()
+			if (is_mpp and child_type == "mpp_target") or (not is_mpp and child_type == "target") then
 				local target_start_row, target_start_col, target_end_row, target_end_col = child:range()
 				local target_text = vim.api.nvim_buf_get_text(
 					bufnr,

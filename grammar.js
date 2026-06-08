@@ -6,6 +6,7 @@ module.exports = grammar({
     source_file: $ => repeat($._statement),
     _statement: $ => choice(
       $.measurement_instruction,
+      $.mpp_instruction,
       $.detector_instruction,
       $.observable_instruction,
       $.gate_instruction,
@@ -22,6 +23,16 @@ module.exports = grammar({
       choice('M', 'MR', 'MRX', 'MRY', 'MRZ', 'MX', 'MY', 'MZ'),
       repeat1($.target)
     ),
+    mpp_instruction: $ => seq(
+      'MPP',
+      optional($.coords),
+      repeat1($.mpp_target)
+    ),
+    mpp_target: $ => seq(
+      $.pauli_target,
+      repeat(seq('*', $.pauli_target))
+    ),
+    pauli_target: $ => /[XYZ]\d+/,
     detector_instruction: $ => prec.right(seq(
       'DETECTOR',
       optional($.coords),
