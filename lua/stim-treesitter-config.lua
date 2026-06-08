@@ -1,4 +1,6 @@
 -- Stim Tree-sitter configuration
+-- Parser registration is also handled by plugin/stim-treesitter.lua at load time,
+-- but we register here too as a fallback for unusual loading orders.
 local M = {}
 
 local STIM_PARSER_ENTRY = {
@@ -12,17 +14,11 @@ local STIM_PARSER_ENTRY = {
 	filetype = "stim",
 }
 
--- Register stim with nvim-treesitter, handling three API generations:
---   Gen 1 (old "master"):  parsers.get_parser_configs() exists
---   Gen 2 (mid "main"):    parsers.configs table exists directly
---   Gen 3 (current "main"): direct table assignment; reload_parsers() wipes and
---                           re-fires User/TSUpdate, so we hook that autocmd
 local function register_parser()
 	local ok, parsers = pcall(require, "nvim-treesitter.parsers")
 	if not ok then
 		return
 	end
-
 	if type(parsers.get_parser_configs) == "function" then
 		parsers.get_parser_configs().stim = STIM_PARSER_ENTRY
 	elseif parsers.configs ~= nil then
@@ -45,16 +41,32 @@ function M.setup(opts)
 		return
 	end
 
-	-- Register immediately (for initial load) and after every reload_parsers() call.
+	-- Ensure parser is registered (plugin/ handles this at load time, but
+	-- register here too in case of unusual lazy-loading order).
 	register_parser()
-	vim.api.nvim_create_autocmd("User", {
-		pattern = "TSUpdate",
-		callback = register_parser,
+	vim.treesitter.language.register("stim", "stim")
+
+	-- Enable treesitter highlighting for stim buffers.
+	-- nvim-treesitter's highlight module only activates for filetypes it knew
+	-- about at initialisation time. Since stim is a custom parser, we start it
+	-- explicitly per-buffer. This works with both old (configs.setup) and new
+	-- (v1.0+) nvim-treesitter APIs, and plays nicely with NvChad.
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = "stim",
+		callback = function(args)
+			pcall(vim.treesitter.start, args.buf)
+		end,
 	})
 
-	-- Map the filetype to the parser name for Neovim's built-in treesitter API.
-	vim.treesitter.language.register("stim", "stim")
-	vim.filetype.add({ extension = { stim = "stim" } })
+	-- Also start highlighting in any stim buffers already open (e.g. if setup()
+	-- is called after the file was loaded).
+	for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+		if vim.api.nvim_buf_is_loaded(buf)
+			and vim.api.nvim_get_option_value("filetype", { buf = buf }) == "stim"
+		then
+			pcall(vim.treesitter.start, buf)
+		end
+	end
 
 	if opts.highlight_measurements then
 		require("stim-treesitter").setup()
