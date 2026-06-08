@@ -530,6 +530,7 @@ end
 -- Expose pure helpers for testing
 M._count_measurement_targets = count_measurement_targets
 M._calculate_threshold_default = calculate_threshold_default
+M._parse_measurements_ts = parse_measurements_ts
 
 -- Setup function
 function M.setup()

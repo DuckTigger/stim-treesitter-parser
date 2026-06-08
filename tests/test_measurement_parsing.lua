@@ -123,6 +123,86 @@ DETECTOR rec[-1]
 		vim.api.nvim_buf_delete(bufnr, { force = true })
 	end)
 
+	-- Test 6: MPP instruction parsed as correct number of measurements
+	test("MPP Pauli-product terms each count as one measurement", function()
+		local parse_measurements = stim_treesitter._parse_measurements_ts
+		if not parse_measurements then
+			return
+		end
+		-- Verify treesitter is functional (mock returns empty for any input)
+		local probe_buf = create_test_buffer("M 0")
+		local probe = parse_measurements(probe_buf)
+		vim.api.nvim_buf_delete(probe_buf, { force = true })
+		local probe_count = 0
+		for _ in pairs(probe) do probe_count = probe_count + 1 end
+		if probe_count == 0 then return end -- mock/no-treesitter environment
+
+		local content = "MPP X0*Z1 Y2*X3"
+		local bufnr = create_test_buffer(content)
+
+		local measurements = parse_measurements(bufnr)
+		local count = 0
+		for _ in pairs(measurements) do
+			count = count + 1
+		end
+		assert(count == 2, "Expected 2 MPP measurements (X0*Z1 and Y2*X3), got " .. count)
+
+		vim.api.nvim_buf_delete(bufnr, { force = true })
+	end)
+
+	-- Test 7: MPP with error parameter
+	test("MPP with error parameter parses targets correctly", function()
+		local parse_measurements = stim_treesitter._parse_measurements_ts
+		if not parse_measurements then
+			return
+		end
+		local probe_buf = create_test_buffer("M 0")
+		local probe = parse_measurements(probe_buf)
+		vim.api.nvim_buf_delete(probe_buf, { force = true })
+		local probe_count = 0
+		for _ in pairs(probe) do probe_count = probe_count + 1 end
+		if probe_count == 0 then return end
+
+		local content = "MPP(0.01) X0*Z1 Z2"
+		local bufnr = create_test_buffer(content)
+
+		local measurements = parse_measurements(bufnr)
+		local count = 0
+		for _ in pairs(measurements) do
+			count = count + 1
+		end
+		assert(count == 2, "Expected 2 MPP measurements, got " .. count)
+
+		vim.api.nvim_buf_delete(bufnr, { force = true })
+	end)
+
+	-- Test 8: Mixed MPP and regular measurement lines
+	test("Mixed MPP and MZ lines total correctly", function()
+		local parse_measurements = stim_treesitter._parse_measurements_ts
+		if not parse_measurements then
+			return
+		end
+		local probe_buf = create_test_buffer("M 0")
+		local probe = parse_measurements(probe_buf)
+		vim.api.nvim_buf_delete(probe_buf, { force = true })
+		local probe_count = 0
+		for _ in pairs(probe) do probe_count = probe_count + 1 end
+		if probe_count == 0 then return end
+
+		-- 3 MZ targets + 2 MPP targets = 5 measurements total
+		local content = "MZ 0 1 2\nMPP X0*Z1 Y3"
+		local bufnr = create_test_buffer(content)
+
+		local measurements = parse_measurements(bufnr)
+		local count = 0
+		for _ in pairs(measurements) do
+			count = count + 1
+		end
+		assert(count == 5, "Expected 5 total measurements (3 MZ + 2 MPP), got " .. count)
+
+		vim.api.nvim_buf_delete(bufnr, { force = true })
+	end)
+
 	-- Summary
 	local passed = 0
 	local total = #results

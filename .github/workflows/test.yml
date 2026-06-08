@@ -168,6 +168,24 @@ jobs:
         vim.api.nvim_win_set_cursor(0, {4, 12})  -- Position on rec[-2]
         stim_treesitter.highlight_measurement()
 
+        -- Test MPP measurement parsing
+        local mpp_buf = vim.api.nvim_create_buf(false, true)
+        vim.api.nvim_buf_set_lines(mpp_buf, 0, -1, false, {
+          'MPP X0*Z1 Y2*X3',
+          'MPP(0.01) X0*Z1 Z2',
+          'MZ 0 1 2',
+        })
+        vim.api.nvim_buf_set_option(mpp_buf, 'filetype', 'stim')
+        local parse_mpp = stim_treesitter._parse_measurements_ts
+        if parse_mpp then
+          local mpp_ms = parse_mpp(mpp_buf)
+          local mpp_count = 0
+          for _ in pairs(mpp_ms) do mpp_count = mpp_count + 1 end
+          assert(mpp_count == 7, 'Expected 7 MPP/MZ measurements, got ' .. mpp_count)
+          print('✅ MPP measurement parsing test passed (' .. mpp_count .. ' measurements)')
+        end
+        vim.api.nvim_buf_delete(mpp_buf, {force = true})
+
         print('✅ End-to-end integration test passed')
         EOF
         " -c "qa!"
