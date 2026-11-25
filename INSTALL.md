@@ -15,7 +15,7 @@ This plugin depends on `nvim-treesitter`. If you don't already have it, Lazy wil
 ```lua
 {
   "DuckTigger/stim-treesitter-parser",
-  event = "VeryLazy",  -- required if your setup lazy-loads by default (e.g. NvChad)
+  lazy = false,  -- small plugin; ensures the parser is registered before any :TSInstall
   dependencies = { "nvim-treesitter/nvim-treesitter" },
   config = function()
     require('stim-treesitter-config').setup({
@@ -27,27 +27,13 @@ This plugin depends on `nvim-treesitter`. If you don't already have it, Lazy wil
 }
 ```
 
-> **NvChad users**: two extra steps are needed:
+> **nvim-treesitter branches**: both the legacy `master` branch and the current
+> `main` branch are supported; the plugin registers the parser in the right
+> format for whichever is installed. On `main`, `:TSInstall stim` also installs
+> the highlight queries into `stdpath("data")/site/queries/stim`.
 >
-> 1. `event = "VeryLazy"` on the plugin spec (already shown above) so `:TSInstall stim` works.
->
-> 2. Enable the treesitter highlight module in your treesitter overrides
->    (`lua/configs/overrides.lua` or equivalent):
->    ```lua
->    M.treesitter = {
->      -- ... your existing config ...
->      highlight = { enable = true },
->    }
->    ```
->    NvChad ships with the highlight module **disabled** by default. Without this,
->    no treesitter syntax colours appear for any language, including stim.
->
-> 3. If highlighting still doesn't appear after `:TSInstall stim`, add these lines
->    to your `init.lua` (after `require("lazy").setup(...)`):
->    ```lua
->    vim.treesitter.language.register("stim", "stim")
->    vim.filetype.add({ extension = { stim = "stim" } })
->    ```
+> Highlighting is started with `vim.treesitter.start()` for `stim` buffers, so no
+> nvim-treesitter highlight module config is needed.
 
 After installing, compile the parser:
 ```vim
@@ -224,12 +210,30 @@ mkdir -p ~/.local/share/nvim/tree-sitter-parsers
 cp stim.so ~/.local/share/nvim/tree-sitter-parsers/
 ```
 
-### Method 2: Using nvim-treesitter
+### Method 2: Using nvim-treesitter (without this plugin)
 
-Add to your Neovim configuration:
+nvim-treesitter `main` branch (Neovim 0.12+):
 
 ```lua
--- In your init.lua or equivalent config file
+vim.api.nvim_create_autocmd("User", {
+  pattern = "TSUpdate",
+  callback = function()
+    require("nvim-treesitter.parsers").stim = {
+      install_info = {
+        path = "/path/to/stim-tresitter", -- local checkout (or url = "https://github.com/DuckTigger/stim-treesitter-parser")
+        queries = "queries/stim",
+      },
+    }
+  end,
+})
+vim.treesitter.language.register("stim", "stim")
+vim.filetype.add({ extension = { stim = "stim" } })
+-- then :TSInstall stim, and start highlighting with vim.treesitter.start() in a FileType autocmd
+```
+
+Legacy `master` branch:
+
+```lua
 local parser_config = require('nvim-treesitter.parsers').get_parser_configs()
 
 parser_config.stim = {
@@ -242,17 +246,6 @@ parser_config.stim = {
   },
   filetype = "stim",
 }
-
-require('nvim-treesitter.configs').setup({
-  ensure_installed = {
-    -- your other parsers...
-  },
-
-  highlight = {
-    enable = true,
-    additional_vim_regex_highlighting = false,
-  },
-})
 ```
 
 ### Method 3: Local Development Setup
