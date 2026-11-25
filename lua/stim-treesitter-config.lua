@@ -3,31 +3,6 @@
 -- but we register here too as a fallback for unusual loading orders.
 local M = {}
 
-local STIM_PARSER_ENTRY = {
-	install_info = {
-		url = "https://github.com/DuckTigger/stim-treesitter-parser",
-		files = { "src/parser.c" },
-		branch = "main",
-		generate_requires_npm = false,
-		requires_generate_from_grammar = false,
-	},
-	filetype = "stim",
-}
-
-local function register_parser()
-	local ok, parsers = pcall(require, "nvim-treesitter.parsers")
-	if not ok then
-		return
-	end
-	if type(parsers.get_parser_configs) == "function" then
-		parsers.get_parser_configs().stim = STIM_PARSER_ENTRY
-	elseif parsers.configs ~= nil then
-		parsers.configs.stim = STIM_PARSER_ENTRY
-	else
-		parsers.stim = STIM_PARSER_ENTRY
-	end
-end
-
 function M.setup(opts)
 	opts = opts or {}
 	local defaults = {
@@ -43,14 +18,12 @@ function M.setup(opts)
 
 	-- Ensure parser is registered (plugin/ handles this at load time, but
 	-- register here too in case of unusual lazy-loading order).
-	register_parser()
-	vim.treesitter.language.register("stim", "stim")
+	require("stim-treesitter-register").setup()
 
 	-- Enable treesitter highlighting for stim buffers.
-	-- nvim-treesitter's highlight module only activates for filetypes it knew
-	-- about at initialisation time. Since stim is a custom parser, we start it
-	-- explicitly per-buffer. This works with both old (configs.setup) and new
-	-- (v1.0+) nvim-treesitter APIs, and plays nicely with NvChad.
+	-- nvim-treesitter's master highlight module only activates for filetypes it
+	-- knew about at initialisation time, and the main branch has no highlight
+	-- module at all, so we start the built-in highlighter explicitly per-buffer.
 	vim.api.nvim_create_autocmd("FileType", {
 		pattern = "stim",
 		callback = function(args)

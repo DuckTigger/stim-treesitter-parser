@@ -20,6 +20,7 @@ A Neovim plugin providing [Tree-sitter](https://tree-sitter.github.io/) syntax h
 ```lua
 {
   "DuckTigger/stim-treesitter-parser",
+  lazy = false,
   dependencies = { "nvim-treesitter/nvim-treesitter" },
   config = function()
     require("stim-treesitter-config").setup({
